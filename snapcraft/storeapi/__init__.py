@@ -95,6 +95,13 @@ class Client():
             'X-SNAPCRAFT-VERSION': snapcraft.__version__
         }
 
+        # X-Ubuntu-Store is for sca/cpi
+        # Also pin specific branded store if `SNAPCRAFT_UBUNTU_STORE`
+        # environment is set.
+        branded_store = os.getenv('SNAPCRAFT_UBUNTU_STORE')
+        if branded_store:
+            self._snapcraft_headers['X-Ubuntu-Store'] = branded_store
+
     def request(self, method, url, params=None, headers=None, **kwargs):
         """Overriding base class to handle the root url."""
         # Note that url may be absolute in which case 'root_url' is ignored by
@@ -364,17 +371,11 @@ class SnapIndexClient(Client):
 
         Tries to build an 'Authorization' header with local credentials
         if they are available.
-        Also pin specific branded store if `SNAPCRAFT_UBUNTU_STORE`
-        environment is set.
         """
         headers = {}
 
         with contextlib.suppress(errors.InvalidCredentialsError):
             headers['Authorization'] = _macaroon_auth(self.conf)
-
-        branded_store = os.getenv('SNAPCRAFT_UBUNTU_STORE')
-        if branded_store:
-            headers['X-Ubuntu-Store'] = branded_store
 
         return headers
 
